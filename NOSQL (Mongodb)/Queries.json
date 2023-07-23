@@ -1,0 +1,136 @@
+
+// Query 1
+
+
+db.new.aggregate([
+  {
+    $match: {
+      "reservations.reservationDate": { $lte: "2023-07-25" }
+    }
+  },
+  {
+    $project: {
+      customerName: 1,
+      customerNo: 1,
+      totalSeats: { $size: "$reservations" }
+    }
+  },
+  {
+    $sort: {
+      totalSeats: 1
+    }
+  }
+])
+
+
+
+// Query 2
+
+db.new.aggregate([
+  {
+    $unwind: "$reservations"
+  },
+  {
+    $match: {
+      "reservations.date": { $gt: "2023-07-05" }
+    }
+  },
+  {
+    $group: {
+      _id: "$reservations.production",
+      totalReservations: { $sum: 1 }
+    }
+  },
+  {
+    $sort: {
+      totalReservations: -1
+    }
+  },
+  {
+    $limit: 5
+  }
+])
+
+// Query 3
+db.new.aggregate([
+  {
+    $unwind: "$reservations"
+  },
+  {
+    $group: {
+      _id: "$address.city",
+      totalReservations: { $sum: 1 }
+    }
+  },
+  {
+    $sort: {
+      totalReservations: 1
+    }
+  },
+  {
+    $limit: 4
+  },
+  {
+    $sort: {
+      totalReservations: -1
+    }
+  }
+])
+
+// Query 4
+
+db.new.aggregate([
+  {
+    $unwind: "$reservations"
+  },
+  {
+    $group: {
+      _id: {
+        production: "$reservations.production",
+        date: "$reservations.date",
+        time: "$reservations.time"
+      },
+      totalReservations: { $sum: 1 }
+    }
+  },
+  {
+    $sort: {
+      totalReservations: -1
+    }
+  },
+  {
+    $limit: 3
+  },
+  {
+    $project: {
+      _id: 0,
+      production: "$_id.production",
+      date: "$_id.date",
+      time: "$_id.time",
+      totalReservations: 1
+    }
+  }
+])
+
+
+// Query 5
+
+
+db.new.aggregate([
+  {
+    $match: {
+      "reservations": { $exists: true, $ne: [] }
+    }
+  },
+  {
+    $addFields: {
+      totalSeats: { $size: "$reservations" }
+    }
+  },
+  {
+    $sort: {
+      "memberCategory": -1,
+      totalSeats: -1
+    }
+  }
+])
